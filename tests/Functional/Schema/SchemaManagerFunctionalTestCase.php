@@ -49,7 +49,6 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
-use function var_dump;
 
 abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 {
@@ -693,9 +692,10 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 
         $this->schemaManager->dropAndCreateView($view);
 
-        self::assertTrue($this->hasElementWithName($this->schemaManager->listViews(), $name));
-        foreach ($this->schemaManager->listViews() as $v) {
-            var_dump($v->getSql());
+        self::assertTrue($this->hasElementWithName($views = $this->schemaManager->listViews(), $name));
+
+        foreach ($views as $v) {
+            self::assertStringContainsString($name, $v->getSql());
         }
     }
 
