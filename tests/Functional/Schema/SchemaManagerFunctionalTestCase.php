@@ -49,6 +49,7 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
+use function var_dump;
 
 abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 {
