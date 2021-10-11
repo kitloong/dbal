@@ -44,6 +44,7 @@ use function array_values;
 use function count;
 use function current;
 use function get_class;
+use function preg_match;
 use function sprintf;
 use function strcasecmp;
 use function strlen;
@@ -114,6 +115,21 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
             $items,
             static function (AbstractAsset $item) use ($name): bool {
                 return $item->getShortestName($item->getNamespaceName()) === $name;
+            }
+        );
+
+        return count($filteredList) === 1;
+    }
+
+    /**
+     * @param View[] $views
+     */
+    private function viewSqlContainsTableName(array $views, string $tableName): bool
+    {
+        $filteredList = array_filter(
+            $views,
+            static function (View $view) use ($tableName): bool {
+                return preg_match('/' . $tableName . '/', $view->getSql()) === 1;
             }
         );
 
@@ -692,7 +708,8 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 
         $this->schemaManager->dropAndCreateView($view);
 
-        self::assertTrue($this->hasElementWithName($this->schemaManager->listViews(), $name));
+        self::assertTrue($this->hasElementWithName($views = $this->schemaManager->listViews(), $name));
+        self::assertTrue($this->viewSqlContainsTableName($views, 'view_test_table'));
     }
 
     public function testAutoincrementDetection(): void
