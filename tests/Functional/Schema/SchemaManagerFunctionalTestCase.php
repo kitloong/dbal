@@ -693,6 +693,9 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $this->schemaManager->dropAndCreateView($view);
 
         self::assertTrue($this->hasElementWithName($this->schemaManager->listViews(), $name));
+        foreach ($this->schemaManager->listViews() as $v) {
+            var_dump($v->getSql());
+        }
     }
 
     public function testAutoincrementDetection(): void
