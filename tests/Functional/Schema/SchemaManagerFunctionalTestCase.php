@@ -124,12 +124,12 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
     /**
      * @param View[] $views
      */
-    private function viewSqlContainsTableName(array $views, string $tableName): bool
+    private function viewSqlContains(array $views, string $contain): bool
     {
         $filteredList = array_filter(
             $views,
-            static function (View $view) use ($tableName): bool {
-                return preg_match('/' . $tableName . '/', $view->getSql()) === 1;
+            static function (View $view) use ($contain): bool {
+                return preg_match('/' . $contain . '/', $view->getSql()) === 1;
             }
         );
 
@@ -702,14 +702,14 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $this->createTestTable('view_test_table');
 
         $name = 'doctrine_test_view';
-        $sql  = 'SELECT * FROM view_test_table';
+        $sql  = 'SELECT id, test FROM view_test_table';
 
         $view = new View($name, $sql);
 
         $this->schemaManager->dropAndCreateView($view);
 
         self::assertTrue($this->hasElementWithName($views = $this->schemaManager->listViews(), $name));
-        self::assertTrue($this->viewSqlContainsTableName($views, 'view_test_table'));
+        self::assertTrue($this->viewSqlContains($views, $sql));
     }
 
     public function testAutoincrementDetection(): void
