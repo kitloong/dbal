@@ -35,6 +35,7 @@ use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\Type;
 
+use function array_diff;
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -43,9 +44,11 @@ use function array_search;
 use function array_values;
 use function count;
 use function current;
+use function explode;
 use function get_class;
-use function preg_match;
+use function preg_match_all;
 use function sprintf;
+use function str_replace;
 use function strcasecmp;
 use function strlen;
 use function strtolower;
@@ -129,7 +132,12 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $filteredList = array_filter(
             $views,
             static function (View $view) use ($contain): bool {
-                return preg_match('/' . $contain . '/', $view->getSql()) === 1;
+                $regex = '/\b(' . str_replace(' ', '|', $contain) . ')\b/i';
+                if (preg_match_all($regex, $view->getSql(), $matched) > 0) {
+                    return array_diff(explode(' ', $contain), $matched[0]) === [];
+                }
+
+                return false;
             }
         );
 
@@ -702,7 +710,7 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $this->createTestTable('view_test_table');
 
         $name = 'doctrine_test_view';
-        $sql  = 'SELECT id, test FROM view_test_table';
+        $sql  = 'SELECT id FROM view_test_table';
 
         $view = new View($name, $sql);
 
