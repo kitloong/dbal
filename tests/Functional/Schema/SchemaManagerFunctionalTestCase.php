@@ -46,9 +46,9 @@ use function count;
 use function current;
 use function explode;
 use function get_class;
+use function implode;
 use function preg_match_all;
 use function sprintf;
-use function str_replace;
 use function strcasecmp;
 use function strlen;
 use function strtolower;
@@ -133,17 +133,18 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $filteredList = array_filter(
             $views,
             static function (View $view) use ($contain): bool {
-                $sql   = strtolower($contain);
-                $regex = '/\b(' . str_replace(' ', '|', $sql) . ')\b/i';
-                if (preg_match_all($regex, strtolower($view->getSql()), $matched) > 0) {
-                    $result = array_diff(explode(' ', $sql), $matched[0]);
+                $words = explode(' ', strtolower($contain));
+                $regex = '/\b(' . implode('|', $words) . ')\b/i';
+
+                if (preg_match_all($regex, strtolower($view->getSql()), $matched) >= count($words)) {
+                    $result = array_diff($words, $matched[0]);
                     if ($result === []) {
                         return true;
                     }
 
                     var_dump($result);
                     var_dump($matched[0]);
-                    var_dump($sql);
+                    var_dump($contain);
                     var_dump($view->getSql());
 
                     return false;
