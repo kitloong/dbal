@@ -35,6 +35,7 @@ use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\Type;
 
+use function array_diff;
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -43,8 +44,10 @@ use function array_search;
 use function array_values;
 use function count;
 use function current;
+use function explode;
 use function get_class;
-use function preg_match;
+use function implode;
+use function preg_match_all;
 use function sprintf;
 use function strcasecmp;
 use function strlen;
@@ -121,19 +124,16 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         return count($filteredList) === 1;
     }
 
-    /**
-     * @param View[] $views
-     */
-    private function viewSqlContainsTableName(array $views, string $tableName): bool
+    private function viewContainsSql(View $view, string $sql): bool
     {
-        $filteredList = array_filter(
-            $views,
-            static function (View $view) use ($tableName): bool {
-                return preg_match('/' . $tableName . '/', $view->getSql()) === 1;
-            }
-        );
+        $words = explode(' ', strtolower($sql));
+        $regex = '/\b(' . implode('|', $words) . ')\b/i';
 
-        return count($filteredList) === 1;
+        if (preg_match_all($regex, strtolower($view->getSql()), $matched) > 0) {
+            return array_diff($words, $matched[0]) === [];
+        }
+
+        return false;
     }
 
     public function testListSequences(): void
@@ -702,14 +702,14 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $this->createTestTable('view_test_table');
 
         $name = 'doctrine_test_view';
-        $sql  = 'SELECT * FROM view_test_table';
+        $sql  = 'SELECT id FROM view_test_table';
 
         $view = new View($name, $sql);
 
         $this->schemaManager->dropAndCreateView($view);
 
         self::assertTrue($this->hasElementWithName($views = $this->schemaManager->listViews(), $name));
-        self::assertTrue($this->viewSqlContainsTableName($views, 'view_test_table'));
+        self::assertTrue($this->viewContainsSql($views[$name], $sql));
     }
 
     public function testAutoincrementDetection(): void
