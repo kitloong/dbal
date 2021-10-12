@@ -133,18 +133,20 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $filteredList = array_filter(
             $views,
             static function (View $view) use ($contain): bool {
-                $regex = '/\b(' . str_replace(' ', '|', $contain) . ')\b/i';
-                if (preg_match_all($regex, $view->getSql(), $matched) > 0) {
-                    $result = array_diff(explode(' ', $contain), $matched[0]);
+                $sql   = strtolower($contain);
+                $regex = '/\b(' . str_replace(' ', '|', $sql) . ')\b/i';
+                if (preg_match_all($regex, strtolower($view->getSql()), $matched) > 0) {
+                    $result = array_diff(explode(' ', $sql), $matched[0]);
                     if ($result === []) {
                         return true;
-                    } else {
-                        var_dump($result);
-                        var_dump($matched[0]);
-                        var_dump($contain);
-                        var_dump($view->getSql());
-                        return false;
                     }
+
+                    var_dump($result);
+                    var_dump($matched[0]);
+                    var_dump($sql);
+                    var_dump($view->getSql());
+
+                    return false;
                 }
 
                 return false;
