@@ -124,26 +124,16 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         return count($filteredList) === 1;
     }
 
-    /**
-     * @param View[] $views
-     */
-    private function viewSqlContains(array $views, string $contain): bool
+    private function viewContainsSql(View $view, string $sql): bool
     {
-        $filteredList = array_filter(
-            $views,
-            static function (View $view) use ($contain): bool {
-                $words = explode(' ', strtolower($contain));
-                $regex = '/\b(' . implode('|', $words) . ')\b/i';
+        $words = explode(' ', strtolower($sql));
+        $regex = '/\b(' . implode('|', $words) . ')\b/i';
 
-                if (preg_match_all($regex, strtolower($view->getSql()), $matched) > 0) {
-                    return array_diff($words, $matched[0]) === [];
-                }
+        if (preg_match_all($regex, strtolower($view->getSql()), $matched) > 0) {
+            return array_diff($words, $matched[0]) === [];
+        }
 
-                return false;
-            }
-        );
-
-        return count($filteredList) === 1;
+        return false;
     }
 
     public function testListSequences(): void
@@ -719,7 +709,7 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
         $this->schemaManager->dropAndCreateView($view);
 
         self::assertTrue($this->hasElementWithName($views = $this->schemaManager->listViews(), $name));
-        self::assertTrue($this->viewSqlContains($views, $sql));
+        self::assertTrue($this->viewContainsSql($views[$name], $sql));
     }
 
     public function testAutoincrementDetection(): void
