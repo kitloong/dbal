@@ -53,6 +53,7 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
+use function var_dump;
 
 abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 {
@@ -134,7 +135,16 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
             static function (View $view) use ($contain): bool {
                 $regex = '/\b(' . str_replace(' ', '|', $contain) . ')\b/i';
                 if (preg_match_all($regex, $view->getSql(), $matched) > 0) {
-                    return array_diff(explode(' ', $contain), $matched[0]) === [];
+                    $result = array_diff(explode(' ', $contain), $matched[0]);
+                    if ($result === []) {
+                        return true;
+                    } else {
+                        var_dump($result);
+                        var_dump($matched[0]);
+                        var_dump($contain);
+                        var_dump($view->getSql());
+                        return false;
+                    }
                 }
 
                 return false;
